@@ -105,10 +105,17 @@ async function run() {
     app.patch("/payment-status", async (req, res) => {
       const paidParcelId = req.query.session_id;
       const session = await stripe.checkout.sessions.retrieve(paidParcelId);
-
+      const transitionId=session.payment_intent;
+     const query={transitionId}
+      const paymentIsExist=await paidParcelCollections.find(query)
+      if(paymentIsExist){
+        return res.send({TracingId:paymentIsExist.TracingId,
+          TransactionId:session.payment_intent,})
+      }
+      const tracingId=generateTracingId()
       if (session.payment_status === "paid") {
         const update = {
-          $set: { paymentStatus: "paid" },
+          $set: { paymentStatus: "paid" ,TracingId:tracingId},
         };
         const paidParcel = await parcellCollections.updateOne(
           { _id: new ObjectId(session.metadata.parcelId) },
@@ -122,6 +129,7 @@ async function run() {
           paidByEmail: session.customer_details.email,
           paidByName: session.customer_details.name,
           amount: session.amount_total / 100,
+          TracingId:tracingId,
           paidAt: new Date(),
         };
         if (session.payment_status === "paid") {
@@ -130,7 +138,9 @@ async function run() {
         res.send({
           success: true,
           updatedParcel: paidParcel,
-          paidParcel: result,
+          // paidParcel: result,
+          TracingId:tracingId,
+          TransactionId:session.payment_intent,
         });
       }
       
