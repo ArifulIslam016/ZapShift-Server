@@ -3,6 +3,12 @@ require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_KEY);
 const cors = require("cors");
 const app = express();
+const crypto = require('crypto');
+
+// Tracing ID generate function
+function generateTracingId() {
+  return crypto.randomBytes(16).toString('hex'); // 16 bytes secure random ID
+}
 const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
@@ -114,7 +120,7 @@ async function run() {
           paidParcelName: session.metadata.parcelName,
           transitionId: session.payment_intent,
           paidByEmail: session.customer_details.email,
-          paidByName: session.customer_detailsname,
+          paidByName: session.customer_details.name,
           amount: session.amount_total / 100,
           paidAt: new Date(),
         };
@@ -127,23 +133,7 @@ async function run() {
           paidParcel: result,
         });
       }
-      // if (session.payment_status === "paid") {
-      //   const paidParcelInfo = {
-      //     paidparcelId: session.metadata.parcelId,
-      //     paidParcelName: session.metadata.parcelName,
-      //     transitionId: session.payment_intent,
-      //     paidByEmail: session.customer_details.email,
-      //     paidByName: session.customer_detailsname,
-      //     amount: session.amount_total / 100,
-      //     paidAt: new Date(),
-      //   };
-      //   const result = await paidParcelCollections.insertOne(paidParcelInfo);
-      //   res.send({
-      //     success: true,
-      //     // updatedParcel: paidParcel,
-      //     paidParcel: result,
-      //   });
-      // }
+      
     });
 
     // Send a ping to confirm a successful connection
