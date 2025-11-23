@@ -107,7 +107,8 @@ async function run() {
       const session = await stripe.checkout.sessions.retrieve(paidParcelId);
       const transitionId=session.payment_intent;
      const query={transitionId}
-      const paymentIsExist=await paidParcelCollections.find(query)
+      const paymentIsExist=await paidParcelCollections.findOne(query)
+      console.log(paymentIsExist)
       if(paymentIsExist){
         return res.send({TracingId:paymentIsExist.TracingId,
           TransactionId:session.payment_intent,})
@@ -145,6 +146,21 @@ async function run() {
       }
       
     });
+
+
+// Get Single Payment infos
+app.get('/paidsinfo',async(req,res)=>{
+  const email=req.query.email
+  const query={}
+  if(email){
+    query.paidByEmail=email
+  }
+  const cursor= paidParcelCollections.find(query)
+  const result=await cursor.toArray()
+  res.send(result)
+})
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
