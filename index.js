@@ -133,3 +133,108 @@ app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
 // Simple commnet for test
+// {
+//   id: 'cs_test_a1dE2mS7lj7yx65t1wMD1WNIYjSmWz00DP83v9KHSXHOOzmUWRqj44BiG4',
+//   object: 'checkout.session',
+//   adaptive_pricing: { enabled: true },
+//   after_expiration: null,
+//   allow_promotion_codes: null,
+//   amount_subtotal: 27000,
+//   amount_total: 27000,
+//   automatic_tax: { enabled: false, liability: null, provider: null, status: null },
+//   billing_address_collection: null,
+//   branding_settings: {
+//     background_color: '#ffffff',
+//     border_style: 'rounded',
+//     button_color: '#0074d4',
+//     display_name: '',
+//     font_family: 'default',
+//     icon: null,
+//     logo: null
+//   },
+//   cancel_url: 'http://localhost:5173/dashboard/payment-cancel',
+//   client_reference_id: null,
+//   client_secret: null,
+//   collected_information: {
+//     business_name: null,
+//     individual_name: null,
+//     shipping_details: null
+//   },
+//   consent: null,
+//   consent_collection: null,
+//   created: 1763903030,
+//   currency: 'usd',
+//   currency_conversion: null,
+//   custom_fields: [],
+//   custom_text: {
+//     after_submit: null,
+//     shipping_address: null,
+//     submit: null,
+//     terms_of_service_acceptance: null
+//   },
+//   customer: null,
+//   customer_creation: 'if_required',
+//   customer_details: {
+//     address: {
+//       city: null,
+//       country: 'BD',
+//       line1: null,
+//       line2: null,
+//       postal_code: null,
+//       state: null
+//     },
+//     business_name: null,
+//     email: 'arifulq234@gmail.com',
+//     individual_name: null,
+//     name: 'Ariful',
+//     phone: null,
+//     tax_exempt: 'none',
+//     tax_ids: []
+//   },
+//   customer_email: 'arifulq234@gmail.com',
+//   discounts: [],
+//   expires_at: 1763989430,
+//   invoice: null,
+//   invoice_creation: {
+//     enabled: false,
+//     invoice_data: {
+//       account_tax_ids: null,
+//       custom_fields: null,
+//       description: null,
+//       footer: null,
+//       issuer: null,
+//       metadata: {},
+//       rendering_options: null
+//     }
+//   },
+//   livemode: false,
+//   locale: null,
+//   metadata: { parcelId: '691f8e7d66fc9df0872b9c32' },
+//   mode: 'payment',
+//   origin_context: null,
+//   payment_intent: 'pi_3SWcxmD5dRVW8WOz0RaxfAUX',
+//   payment_link: null,
+//   payment_method_collection: 'if_required',
+//   payment_method_configuration_details: { id: 'pmc_1SVeHPD5dRVW8WOzWWWVH47n', parent: null },
+//   payment_method_options: { card: { request_three_d_secure: 'automatic' } },
+//   payment_method_types: [ 'card', 'link' ],
+//   payment_status: 'paid',
+//   permissions: null,
+//   phone_number_collection: { enabled: false },
+//   presentment_details: { presentment_amount: 3428058, presentment_currency: 'bdt' },
+//   recovered_from: null,
+//   saved_payment_method_options: null,
+//   setup_intent: null,
+//   shipping_address_collection: null,
+//   shipping_cost: null,
+//   shipping_options: [],
+//   status: 'complete',
+//   submit_type: null,
+//   subscription: null,
+//   success_url: 'http://localhost:5173/dashboard/payment-success?session_id={CHECKOUT_SESSION_ID}',
+//   total_details: { amount_discount: 0, amount_shipping: 0, amount_tax: 0 },
+//   ui_mode: 'hosted',
+//   url: null,
+//   wallet_options: null
+// }
+
