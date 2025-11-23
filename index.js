@@ -24,7 +24,7 @@ async function run() {
     await client.connect();
     const db = client.db("ZapShift");
     const parcellCollections = db.collection("parlcels");
-    const paidParcelCollections=db.collection("paidParcelcollection")
+    const paidParcelCollections = db.collection("paidParcelcollection");
     // AllGet Sections
     app.get("/parcels", async (req, res) => {
       const { email } = req.query;
@@ -85,6 +85,7 @@ async function run() {
         mode: "payment",
         metadata: {
           parcelId: paymentInfo.id,
+          parcelName: paymentInfo.percelName,
         },
         success_url: `${process.env.STRIPE_DOMAIN}/dashboard/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.STRIPE_DOMAIN}/dashboard/payment-cancel`,
@@ -103,15 +104,46 @@ async function run() {
         const update = {
           $set: { paymentStatus: "paid" },
         };
-        const paidParcel =await parcellCollections.updateOne(
+        const paidParcel = await parcellCollections.updateOne(
           { _id: new ObjectId(session.metadata.parcelId) },
           update
         );
-        console.log(session)
-        // const paidParcelInfo={
-        //   parcelId:
-        // }
+        // console.log(session)
+        const paidParcelInfo = {
+          paidparcelId: session.metadata.parcelId,
+          paidParcelName: session.metadata.parcelName,
+          transitionId: session.payment_intent,
+          paidByEmail: session.customer_details.email,
+          paidByName: session.customer_detailsname,
+          amount: session.amount_total / 100,
+          paidAt: new Date(),
+        };
+        if (session.payment_status === "paid") {
+          const result = await paidParcelCollections.insertOne(paidParcelInfo);
+        }
+        res.send({
+          success: true,
+          updatedParcel: paidParcel,
+          paidParcel: result,
+        });
       }
+      // if (session.payment_status === "paid") {
+      //   const paidParcelInfo = {
+      //     paidparcelId: session.metadata.parcelId,
+      //     paidParcelName: session.metadata.parcelName,
+      //     transitionId: session.payment_intent,
+      //     paidByEmail: session.customer_details.email,
+      //     paidByName: session.customer_detailsname,
+      //     amount: session.amount_total / 100,
+      //     paidAt: new Date(),
+      //   };
+      //   const result = await paidParcelCollections.insertOne(paidParcelInfo);
+      //   res.send({
+      //     success: true,
+      //     // updatedParcel: paidParcel,
+      //     paidParcel: result,
+      //   });
+      // }
     });
 
     // Send a ping to confirm a successful connection
@@ -237,4 +269,3 @@ app.listen(port, () => {
 //   url: null,
 //   wallet_options: null
 // }
-
