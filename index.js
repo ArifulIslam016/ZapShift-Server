@@ -3,11 +3,11 @@ require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_KEY);
 const cors = require("cors");
 const app = express();
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 // Tracing ID generate function
 function generateTracingId() {
-  return crypto.randomBytes(16).toString('hex'); // 16 bytes secure random ID
+  return crypto.randomBytes(16).toString("hex"); // 16 bytes secure random ID
 }
 const port = process.env.PORT || 3000;
 app.use(cors());
@@ -23,7 +23,14 @@ const client = new MongoClient(process.env.uri, {
     deprecationErrors: true,
   },
 });
-
+const IsAuthorized = (req, res, next) => {
+  // console.log(req.headers.authorization)
+  const isAuthorized = req.headers.authorization?.split(" ")[1];
+  if (!isAuthorized) {
+    return res.status(401).send({ message: "UnAuthorized Access" });
+  }
+  next();
+};
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -105,18 +112,20 @@ async function run() {
     app.patch("/payment-status", async (req, res) => {
       const paidParcelId = req.query.session_id;
       const session = await stripe.checkout.sessions.retrieve(paidParcelId);
-      const transitionId=session.payment_intent;
-     const query={transitionId}
-      const paymentIsExist=await paidParcelCollections.findOne(query)
-      console.log(paymentIsExist)
-      if(paymentIsExist){
-        return res.send({TracingId:paymentIsExist.TracingId,
-          TransactionId:session.payment_intent,})
+      const transitionId = session.payment_intent;
+      const query = { transitionId };
+      const paymentIsExist = await paidParcelCollections.findOne(query);
+      console.log(paymentIsExist);
+      if (paymentIsExist) {
+        return res.send({
+          TracingId: paymentIsExist.TracingId,
+          TransactionId: session.payment_intent,
+        });
       }
-      const tracingId=generateTracingId()
+      const tracingId = generateTracingId();
       if (session.payment_status === "paid") {
         const update = {
-          $set: { paymentStatus: "paid" ,TracingId:tracingId},
+          $set: { paymentStatus: "paid", TracingId: tracingId },
         };
         const paidParcel = await parcellCollections.updateOne(
           { _id: new ObjectId(session.metadata.parcelId) },
@@ -130,7 +139,7 @@ async function run() {
           paidByEmail: session.customer_details.email,
           paidByName: session.customer_details.name,
           amount: session.amount_total / 100,
-          TracingId:tracingId,
+          TracingId: tracingId,
           paidAt: new Date(),
         };
         if (session.payment_status === "paid") {
@@ -140,27 +149,23 @@ async function run() {
           success: true,
           updatedParcel: paidParcel,
           // paidParcel: result,
-          TracingId:tracingId,
-          TransactionId:session.payment_intent,
+          TracingId: tracingId,
+          TransactionId: session.payment_intent,
         });
       }
-      
     });
 
-
-// Get Single Payment infos
-app.get('/paidsinfo',async(req,res)=>{
-  const email=req.query.email
-  const query={}
-  if(email){
-    query.paidByEmail=email
-  }
-  const cursor= paidParcelCollections.find(query)
-  const result=await cursor.toArray()
-  res.send(result)
-})
-
-
+    // Get Single Payment infos
+    app.get("/paidsinfo", IsAuthorized, async (req, res) => {
+      const email = req.query.email;
+      const query = {};
+      if (email) {
+        query.paidByEmail = email;
+      }
+      const cursor = paidParcelCollections.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
