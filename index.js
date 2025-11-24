@@ -23,6 +23,14 @@ const client = new MongoClient(process.env.uri, {
     deprecationErrors: true,
   },
 });
+const admin = require("firebase-admin");
+
+const serviceAccount = require("./zapshift--firebase-adminsdk.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
 const IsAuthorized = (req, res, next) => {
   // console.log(req.headers.authorization)
   const isAuthorized = req.headers.authorization?.split(" ")[1];
