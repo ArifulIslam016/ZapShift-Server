@@ -216,6 +216,14 @@ app.patch('/riders/:id',async(req,res)=>{
   }
   const result=await riderCollections.updateOne({_id:new ObjectId(id)},updateInfo)
   res.send(result)
+  if(req.body.status==="approved"){
+      const userUpdate=await userCollections.updateOne({email:req.body.email},{$set:{role:"Rider"}})
+
+  }
+  if(req.body.status==="rejected"){
+      const userUpdate=await userCollections.updateOne({email:req.body.email},{$set:{role:"user"}})
+
+  }
 })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
