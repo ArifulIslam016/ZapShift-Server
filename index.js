@@ -196,6 +196,17 @@ app.post('/users',async(req,res)=>{
   const result=await userCollections.insertOne(user)
   res.send(result)
 })
+app.get('/users',IsAuthorized,async(req,res)=>{
+  const cursor=userCollections.find()
+  const result=await cursor.toArray()
+  res.send(result)
+})
+app.patch('/users/:id',async(req,res)=>{
+  const id=req.params.id;
+  const UserInfo=req.body
+  const result=await userCollections.updateOne({_id:new ObjectId(id)},{$set:{role:UserInfo.role}})
+  res.send(result)
+})
 // Rider Related Api
 app.post("/riders",async(req,res)=>{
   const riderInfo=req.body;
@@ -204,7 +215,7 @@ app.post("/riders",async(req,res)=>{
   const result=await riderCollections.insertOne(riderInfo)
   res.send(result)
 })
-app.get('/riders',async(req,res)=>{
+app.get('/riders',IsAuthorized,async(req,res)=>{
   const cursor=riderCollections.find()
   const resutlt=await cursor.toArray()
   res.send(resutlt)
