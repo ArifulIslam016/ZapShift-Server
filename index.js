@@ -53,6 +53,10 @@ async function run() {
     const userCollections = db.collection("userCollections");
    const paidParcelCollections = db.collection("paidParcelcollection");
    const riderCollections=db.collection("riderCollections")
+  //  MidleWare with Database
+   const verifyAdmin=(req,res,next)=>{
+    const email=req.decodedEmail
+   }
 
     app.get("/parcels", async (req, res) => {
       const { email } = req.query;
@@ -196,7 +200,7 @@ app.post('/users',async(req,res)=>{
   const result=await userCollections.insertOne(user)
   res.send(result)
 })
-app.get('/users',IsAuthorized,async(req,res)=>{
+app.get('/users',IsAuthorized,verifyAdmin,async(req,res)=>{
   const cursor=userCollections.find()
   const result=await cursor.toArray()
   res.send(result)
@@ -206,6 +210,15 @@ app.patch('/users/:id',async(req,res)=>{
   const UserInfo=req.body
   const result=await userCollections.updateOne({_id:new ObjectId(id)},{$set:{role:UserInfo.role}})
   res.send(result)
+})
+app.get('/users/:id',async(req,res)=>{
+
+})
+app.get('/users/:email/role',IsAuthorized,async(req,res)=>{
+  const query={email:req.params.email}
+  const result=await userCollections.findOne(query)
+  res.send({role:result.role})
+
 })
 // Rider Related Api
 app.post("/riders",async(req,res)=>{
