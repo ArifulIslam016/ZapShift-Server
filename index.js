@@ -233,7 +233,7 @@ app.post("/riders",async(req,res)=>{
   const result=await riderCollections.insertOne(riderInfo)
   res.send(result)
 })
-app.get('/riders',IsAuthorized,async(req,res)=>{
+app.get('/riders',IsAuthorized,verifyAdmin,async(req,res)=>{
   const cursor=riderCollections.find()
   const resutlt=await cursor.toArray()
   res.send(resutlt)
