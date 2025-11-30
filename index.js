@@ -28,6 +28,7 @@ const admin = require("firebase-admin");
 const serviceAccount = require("./zapshift--firebase-adminsdk.json");
 const { Auth } = require("firebase-admin/auth");
 
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
@@ -54,8 +55,12 @@ async function run() {
    const paidParcelCollections = db.collection("paidParcelcollection");
    const riderCollections=db.collection("riderCollections")
   //  MidleWare with Database
-   const verifyAdmin=(req,res,next)=>{
+   const verifyAdmin=async(req,res,next)=>{
     const email=req.decodedEmail
+    const user=await userCollections.findOne({email})
+    if(user.role!=='admin'){
+      return res.status(403).send("message:Admin can only access this")
+    }
     next()
    }
 
@@ -135,7 +140,6 @@ async function run() {
       const transitionId = session.payment_intent;
       const query = { transitionId };
       const paymentIsExist = await paidParcelCollections.findOne(query);
-      console.log(paymentIsExist);
       if (paymentIsExist) {
         return res.send({
           TracingId: paymentIsExist.TracingId,
