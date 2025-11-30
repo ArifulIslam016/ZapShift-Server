@@ -56,6 +56,7 @@ async function run() {
   //  MidleWare with Database
    const verifyAdmin=(req,res,next)=>{
     const email=req.decodedEmail
+    next()
    }
 
     app.get("/parcels", async (req, res) => {
@@ -211,9 +212,9 @@ app.patch('/users/:id',async(req,res)=>{
   const result=await userCollections.updateOne({_id:new ObjectId(id)},{$set:{role:UserInfo.role}})
   res.send(result)
 })
-app.get('/users/:id',async(req,res)=>{
+// app.get('/users/:id',async(req,res)=>{
 
-})
+// })
 app.get('/users/:email/role',IsAuthorized,async(req,res)=>{
   const query={email:req.params.email}
   const result=await userCollections.findOne(query)
