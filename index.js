@@ -65,11 +65,15 @@ async function run() {
    }
 
     app.get("/parcels", async (req, res) => {
-      const { email } = req.query;
+      const { email,deliveryStatus } = req.query;
       const query = {};
       if (email) {
         query.SenderEamil = email;
       }
+      if(deliveryStatus){
+        query.deliveryStatus=deliveryStatus
+      }
+      // console.log(deliveryStatus)
       const cursor = parcellCollections.find(query).sort({ createdAt: -1 });
       const result = await cursor.toArray();
       res.send(result);
