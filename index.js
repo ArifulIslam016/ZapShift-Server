@@ -146,15 +146,9 @@ async function run() {
           TransactionId: session.payment_intent,
         });
       }
+      // console.log(session.payment_status)
       const tracingId = generateTracingId();
       if (session.payment_status === "paid") {
-        const update = {
-          $set: { paymentStatus: "paid", TracingId: tracingId },
-        };
-        const paidParcel = await parcellCollections.updateOne(
-          { _id: new ObjectId(session.metadata.parcelId) },
-          update
-        );
         // console.log(session)
         const paidParcelInfo = {
           paidparcelId: session.metadata.parcelId,
@@ -169,6 +163,13 @@ async function run() {
         if (session.payment_status === "paid") {
           const result = await paidParcelCollections.insertOne(paidParcelInfo);
         }
+          const update = {
+          $set: { paymentStatus: "paid", TracingId: tracingId,deliveryStatus:'Pickup in progress' },
+        };
+        const paidParcel = await parcellCollections.updateOne(
+          { _id: new ObjectId(session.metadata.parcelId) },
+          update
+        );
         res.send({
           success: true,
           updatedParcel: paidParcel,
