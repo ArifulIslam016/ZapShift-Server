@@ -205,12 +205,12 @@ app.post('/users',async(req,res)=>{
   const result=await userCollections.insertOne(user)
   res.send(result)
 })
-app.get('/users',IsAuthorized,verifyAdmin,async(req,res)=>{
+app.get('/users',IsAuthorized,async(req,res)=>{
   const cursor=userCollections.find()
   const result=await cursor.toArray()
   res.send(result)
 })
-app.patch('/users/:id',async(req,res)=>{
+app.patch('/users/:id',IsAuthorized,verifyAdmin,async(req,res)=>{
   const id=req.params.id;
   const UserInfo=req.body
   const result=await userCollections.updateOne({_id:new ObjectId(id)},{$set:{role:UserInfo.role}})
