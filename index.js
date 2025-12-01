@@ -206,7 +206,15 @@ app.post('/users',async(req,res)=>{
   res.send(result)
 })
 app.get('/users',IsAuthorized,async(req,res)=>{
-  const cursor=userCollections.find()
+  const searchText=req.query.searchKey
+  const query={}
+  if(searchText){
+    query.$or=[
+      {displayName:{$regex:searchText,$options:'i'}},
+      {email:{$regex:searchText,$options:'i'}}
+    ]
+  }
+  const cursor=userCollections.find(query).sort({createAt:-1})
   const result=await cursor.toArray()
   res.send(result)
 })
