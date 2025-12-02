@@ -76,8 +76,22 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
+    app.get("/parcels/rider",async(req,res)=>{
+      const {deliverystatus,rideremail}=req.query
+      const query={}
+      if(deliverystatus){
+        query.deliveryStatus=deliverystatus
+
+      }
+      if(rideremail){
+        query.riderEmail=rideremail
+      }
+      const cursor=parcellCollections.find(query)
+      const result=await cursor.toArray()
+      res.send(result)
+    })
     // indivituil get sections
-    app.get("/parcels/:parcelId", async (req, res) => {
+    app.get("parcels/:parcelId", async (req, res) => {
       const id = req.params.parcelId;
       const result = await parcellCollections.findOne({
         _id: new ObjectId(id),
