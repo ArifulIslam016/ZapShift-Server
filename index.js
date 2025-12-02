@@ -254,7 +254,7 @@ app.get('/riders',IsAuthorized,verifyAdmin,async(req,res)=>{
 app.patch('/riders/:id',async(req,res)=>{
   const id=req.params.id
   const updateInfo={
-    $set:{status:req.body.status}
+    $set:{status:req.body.status,workingStatus:"available"}
   }
   const result=await riderCollections.updateOne({_id:new ObjectId(id)},updateInfo)
   res.send(result)
