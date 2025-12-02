@@ -28,22 +28,20 @@ const admin = require("firebase-admin");
 const serviceAccount = require("./zapshift--firebase-adminsdk.json");
 const { Auth } = require("firebase-admin/auth");
 
-
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
 });
 
-const IsAuthorized = async(req, res, next) => {
+const IsAuthorized = async (req, res, next) => {
   // console.log(req.headers.authorization)
   const isAuthorized = req.headers.authorization?.split(" ")[1];
   if (!isAuthorized) {
     return res.status(401).send({ message: "UnAuthorized Access" });
   }
-  const decode=await admin.auth().verifyIdToken(isAuthorized)
+  const decode = await admin.auth().verifyIdToken(isAuthorized);
   // console.log(decode)
-  req.decodedEmail=decode.email
-  if(admin)
-  next();
+  req.decodedEmail = decode.email;
+  if (admin) next();
 };
 async function run() {
   try {
@@ -52,26 +50,26 @@ async function run() {
     const db = client.db("ZapShift");
     const parcellCollections = db.collection("parlcels");
     const userCollections = db.collection("userCollections");
-   const paidParcelCollections = db.collection("paidParcelcollection");
-   const riderCollections=db.collection("riderCollections")
-  //  MidleWare with Database
-   const verifyAdmin=async(req,res,next)=>{
-    const email=req.decodedEmail
-    const user=await userCollections.findOne({email})
-    if(user.role!=='admin'){
-      return res.status(403).send("message:Admin can only access this")
-    }
-    next()
-   }
+    const paidParcelCollections = db.collection("paidParcelcollection");
+    const riderCollections = db.collection("riderCollections");
+    //  MidleWare with Database
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decodedEmail;
+      const user = await userCollections.findOne({ email });
+      if (user.role !== "admin") {
+        return res.status(403).send("message:Admin can only access this");
+      }
+      next();
+    };
 
     app.get("/parcels", async (req, res) => {
-      const { email,deliveryStatus } = req.query;
+      const { email, deliveryStatus } = req.query;
       const query = {};
       if (email) {
         query.SenderEamil = email;
       }
-      if(deliveryStatus){
-        query.deliveryStatus=deliveryStatus
+      if (deliveryStatus) {
+        query.deliveryStatus = deliveryStatus;
       }
       // console.log(deliveryStatus)
       const cursor = parcellCollections.find(query).sort({ createdAt: -1 });
@@ -94,8 +92,16 @@ async function run() {
       const result = await parcellCollections.insertOne(parcel);
       res.send(result);
     });
+    app.patch("/parcel/:id", async (req, res) => {
+      const updatedInfo=req.body
+      const parcelId=req.params.id
+      const result=await parcellCollections.updateOne({_id:new ObjectId(parcelId)},{$set:{deliveryStatus:"Rider assainge",riderEmail:updatedInfo.  riderEmail,riderId:updatedInfo.riderId,riderName:updatedInfo.riderName}})
 
-   
+      const riderResult=await riderCollections.updateOne({_id:new ObjectId(updatedInfo.riderId)},{$set:{workingStatus:'In_transit'}})
+      res.send(riderResult)
+      console.log(riderResult)
+    });
+
     // Parcel Delete
     app.delete("/parcels/:parcelId", async (req, res) => {
       const id = req.params.parcelId;
@@ -167,8 +173,12 @@ async function run() {
         if (session.payment_status === "paid") {
           const result = await paidParcelCollections.insertOne(paidParcelInfo);
         }
-          const update = {
-          $set: { paymentStatus: "paid", TracingId: tracingId,deliveryStatus:'Pickup in progress' },
+        const update = {
+          $set: {
+            paymentStatus: "paid",
+            TracingId: tracingId,
+            deliveryStatus: "Pickup in progress",
+          },
         };
         const paidParcel = await parcellCollections.updateOne(
           { _id: new ObjectId(session.metadata.parcelId) },
@@ -190,94 +200,103 @@ async function run() {
       const query = {};
       if (email) {
         query.paidByEmail = email;
-        if(req.decodedEmail!==email){
-          return res.status(403).send({message:"Forbidden"})
+        if (req.decodedEmail !== email) {
+          return res.status(403).send({ message: "Forbidden" });
         }
       }
       const cursor = paidParcelCollections.find(query);
       const result = await cursor.toArray();
       res.send(result);
     });
-app.post('/users',async(req,res)=>{
-  const user=req.body;
-  const query={email:user.email}
-  const isExist=await userCollections.findOne(query)
-  if(isExist){
-    return res.status(401).send({message:"userAlreadyExist"})
-  }
-  user.createAt=new Date()
-  user.role="user"
-  const result=await userCollections.insertOne(user)
-  res.send(result)
-})
-app.get('/users',IsAuthorized,async(req,res)=>{
-  const searchText=req.query.searchKey
-  const query={}
-  if(searchText){
-    query.$or=[
-      {displayName:{$regex:searchText,$options:'i'}},
-      {email:{$regex:searchText,$options:'i'}}
-    ]
-  }
-  const cursor=userCollections.find(query).sort({createAt:-1})
-  const result=await cursor.toArray()
-  res.send(result)
-})
-app.patch('/users/:id',IsAuthorized,verifyAdmin,async(req,res)=>{
-  const id=req.params.id;
-  const UserInfo=req.body
-  const result=await userCollections.updateOne({_id:new ObjectId(id)},{$set:{role:UserInfo.role}})
-  res.send(result)
-})
-// app.get('/users/:id',async(req,res)=>{
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email };
+      const isExist = await userCollections.findOne(query);
+      if (isExist) {
+        return res.status(401).send({ message: "userAlreadyExist" });
+      }
+      user.createAt = new Date();
+      user.role = "user";
+      const result = await userCollections.insertOne(user);
+      res.send(result);
+    });
+    app.get("/users", IsAuthorized, async (req, res) => {
+      const searchText = req.query.searchKey;
+      const query = {};
+      if (searchText) {
+        query.$or = [
+          { displayName: { $regex: searchText, $options: "i" } },
+          { email: { $regex: searchText, $options: "i" } },
+        ];
+      }
+      const cursor = userCollections.find(query).sort({ createAt: -1 });
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+    app.patch("/users/:id", IsAuthorized, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const UserInfo = req.body;
+      const result = await userCollections.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { role: UserInfo.role } }
+      );
+      res.send(result);
+    });
+    // app.get('/users/:id',async(req,res)=>{
 
-// })
-app.get('/users/:email/role',IsAuthorized,async(req,res)=>{
-  const query={email:req.params.email}
-  const result=await userCollections.findOne(query)
-  res.send({role:result.role})
-
-})
-// Rider Related Api
-app.post("/riders",async(req,res)=>{
-  const riderInfo=req.body;
-  riderInfo.applyAt=new Date()
-  riderInfo.status='pending'
-  const result=await riderCollections.insertOne(riderInfo)
-  res.send(result)
-})
-app.get('/riders',IsAuthorized,verifyAdmin,async(req,res)=>{
-  const {district,workingStatus,status}=req.query
-  const query={}
-  if(district){
-    query.district=district
-  }
-  if(workingStatus){
-    query.workingStatus=workingStatus
-  }
-  if(status){
-    query.status=status
-  }
-  const cursor=riderCollections.find(query)
-  const resutlt=await cursor.toArray()
-  res.send(resutlt)
-})
-app.patch('/riders/:id',async(req,res)=>{
-  const id=req.params.id
-  const updateInfo={
-    $set:{status:req.body.status,workingStatus:"available"}
-  }
-  const result=await riderCollections.updateOne({_id:new ObjectId(id)},updateInfo)
-  res.send(result)
-  if(req.body.status==="approved"){
-      const userUpdate=await userCollections.updateOne({email:req.body.email},{$set:{role:"Rider"}})
-
-  }
-  if(req.body.status==="rejected"){
-      const userUpdate=await userCollections.updateOne({email:req.body.email},{$set:{role:"user"}})
-
-  }
-})
+    // })
+    app.get("/users/:email/role", IsAuthorized, async (req, res) => {
+      const query = { email: req.params.email };
+      const result = await userCollections.findOne(query);
+      res.send({ role: result.role });
+    });
+    // Rider Related Api
+    app.post("/riders", async (req, res) => {
+      const riderInfo = req.body;
+      riderInfo.applyAt = new Date();
+      riderInfo.status = "pending";
+      const result = await riderCollections.insertOne(riderInfo);
+      res.send(result);
+    });
+    app.get("/riders", IsAuthorized, verifyAdmin, async (req, res) => {
+      const { district, workingStatus, status } = req.query;
+      const query = {};
+      if (district) {
+        query.district = district;
+      }
+      if (workingStatus) {
+        query.workingStatus = workingStatus;
+      }
+      if (status) {
+        query.status = status;
+      }
+      const cursor = riderCollections.find(query);
+      const resutlt = await cursor.toArray();
+      res.send(resutlt);
+    });
+    app.patch("/riders/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateInfo = {
+        $set: { status: req.body.status, workingStatus: "available" },
+      };
+      const result = await riderCollections.updateOne(
+        { _id: new ObjectId(id) },
+        updateInfo
+      );
+      res.send(result);
+      if (req.body.status === "approved") {
+        const userUpdate = await userCollections.updateOne(
+          { email: req.body.email },
+          { $set: { role: "Rider" } }
+        );
+      }
+      if (req.body.status === "rejected") {
+        const userUpdate = await userCollections.updateOne(
+          { email: req.body.email },
+          { $set: { role: "user" } }
+        );
+      }
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
