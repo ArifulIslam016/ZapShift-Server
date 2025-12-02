@@ -247,7 +247,18 @@ app.post("/riders",async(req,res)=>{
   res.send(result)
 })
 app.get('/riders',IsAuthorized,verifyAdmin,async(req,res)=>{
-  const cursor=riderCollections.find()
+  const {district,workingStatus,status}=req.query
+  const query={}
+  if(district){
+    query.district=district
+  }
+  if(workingStatus){
+    query.workingStatus=workingStatus
+  }
+  if(status){
+    query.status=status
+  }
+  const cursor=riderCollections.find(query)
   const resutlt=await cursor.toArray()
   res.send(resutlt)
 })
