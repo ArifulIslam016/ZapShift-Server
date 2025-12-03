@@ -106,6 +106,7 @@ async function run() {
       const result = await parcellCollections.insertOne(parcel);
       res.send(result);
     });
+    // this parcel patch is only for rider assaign
     app.patch("/parcel/:id", async (req, res) => {
       const updatedInfo=req.body
       const parcelId=req.params.id
@@ -115,7 +116,12 @@ async function run() {
       res.send(riderResult)
       console.log(riderResult)
     });
-
+app.patch('/parcels/:id/deleveryStatus',async(req,res)=>{
+  updatedStatus=req.body,
+  id=req.params.id
+  const result=await parcellCollections.updateOne({_id:new ObjectId(id)},{$set:{deliveryStatus:updatedStatus.deliveryStatus}})
+  res.send(result)
+})
     // Parcel Delete
     app.delete("/parcels/:parcelId", async (req, res) => {
       const id = req.params.parcelId;
