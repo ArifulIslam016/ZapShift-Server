@@ -124,7 +124,7 @@ const logTrackings=async(trackingId,status)=>{
       const updatedInfo=req.body
       const parcelId=req.params.id
       const result=await parcellCollections.updateOne({_id:new ObjectId(parcelId)},{$set:{deliveryStatus:"Rider assainge",riderEmail:updatedInfo.  riderEmail,riderId:updatedInfo.riderId,riderName:updatedInfo.riderName}})
-
+      logTrackings(updatedInfo.trackingId,"Rider_assainge")
       const riderResult=await riderCollections.updateOne({_id:new ObjectId(updatedInfo.riderId)},{$set:{workingStatus:'In_transit'}})
       res.send(riderResult)
       console.log(riderResult)
@@ -133,6 +133,7 @@ app.patch('/parcels/:id/deleveryStatus',async(req,res)=>{
   updatedStatus=req.body,
   id=req.params.id
   const result=await parcellCollections.updateOne({_id:new ObjectId(id)},{$set:{deliveryStatus:updatedStatus.deliveryStatus}})
+  logTrackings(updatedStatus.trackingId,updatedStatus.deliveryStatus)
   if(updatedStatus.deliveryStatus==="Deliveried"){
     const riderResult=await riderCollections.updateOne({_id:new ObjectId(updatedStatus.riderId)},{$set:{workingStatus:'available'}})
       res.send(riderResult)
@@ -335,6 +336,12 @@ app.patch('/parcels/:id/deleveryStatus',async(req,res)=>{
         );
       }
     });
+    // Traking related Apis
+    app.get("/trackings/:trackingId",async(req,res)=>{
+      const query={trackingId:req.params.trackingId}
+      const result=await tracingsCollections.find(query).sort({createdAt:-1}).toArray()
+      res.send(result)
+    })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
