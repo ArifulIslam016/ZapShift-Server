@@ -80,7 +80,7 @@ async function run() {
       const {deliverystatus,rideremail}=req.query
       const query={}
       if(deliverystatus){
-        query.deliveryStatus=deliverystatus
+        query.deliveryStatus={$nin:["Deliveried"]}
 
       }
       if(rideremail){
