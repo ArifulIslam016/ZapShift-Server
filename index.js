@@ -52,6 +52,7 @@ async function run() {
     const userCollections = db.collection("userCollections");
     const paidParcelCollections = db.collection("paidParcelcollection");
     const riderCollections = db.collection("riderCollections");
+    const tracingsCollections = db.collection("tracings");
     //  MidleWare with Database
     const verifyAdmin = async (req, res, next) => {
       const email = req.decodedEmail;
@@ -61,7 +62,16 @@ async function run() {
       }
       next();
     };
-
+const logTrackings=async(trackingId,status)=>{
+  const log={
+    trackingId,
+    status,
+    deltails:status.split('_').join(' '),
+    createdAt:new Date()
+  }
+  const result= await tracingsCollections.insertOne(log)
+  return result
+}
     app.get("/parcels", async (req, res) => {
       const { email, deliveryStatus } = req.query;
       const query = {};
@@ -79,9 +89,12 @@ async function run() {
     app.get("/parcels/rider",async(req,res)=>{
       const {deliverystatus,rideremail}=req.query
       const query={}
-      if(deliverystatus){
+
+      if(deliverystatus!=="Deliveried"){
         query.deliveryStatus={$nin:["Deliveried"]}
 
+      }else{
+        query.deliveryStatus={$in:["Deliveried"]}
       }
       if(rideremail){
         query.riderEmail=rideremail
@@ -120,6 +133,10 @@ app.patch('/parcels/:id/deleveryStatus',async(req,res)=>{
   updatedStatus=req.body,
   id=req.params.id
   const result=await parcellCollections.updateOne({_id:new ObjectId(id)},{$set:{deliveryStatus:updatedStatus.deliveryStatus}})
+  if(updatedStatus.deliveryStatus==="Deliveried"){
+    const riderResult=await riderCollections.updateOne({_id:new ObjectId(updatedStatus.riderId)},{$set:{workingStatus:'available'}})
+      res.send(riderResult)
+  }
   res.send(result)
 })
     // Parcel Delete
@@ -211,6 +228,7 @@ app.patch('/parcels/:id/deleveryStatus',async(req,res)=>{
           TracingId: tracingId,
           TransactionId: session.payment_intent,
         });
+        logTrackings(tracingId,"Pickup in progress")
       }
     });
 
