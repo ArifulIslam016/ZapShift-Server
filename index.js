@@ -27,6 +27,7 @@ const admin = require("firebase-admin");
 
 const serviceAccount = require("./zapshift--firebase-adminsdk.json");
 const { Auth } = require("firebase-admin/auth");
+const { count } = require("console");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -116,6 +117,7 @@ const logTrackings=async(trackingId,status)=>{
     app.post("/parcels", async (req, res) => {
       const parcel = req.body;
       parcel.createdAt = new Date();
+      parcel.deliveryStatus="Parcel Created"
       const result = await parcellCollections.insertOne(parcel);
       res.send(result);
     });
@@ -210,6 +212,7 @@ app.patch('/parcels/:id/deleveryStatus',async(req,res)=>{
         };
         if (session.payment_status === "paid") {
           const result = await paidParcelCollections.insertOne(paidParcelInfo);
+          // return res.send(result)
         }
         const update = {
           $set: {
@@ -221,15 +224,16 @@ app.patch('/parcels/:id/deleveryStatus',async(req,res)=>{
         const paidParcel = await parcellCollections.updateOne(
           { _id: new ObjectId(session.metadata.parcelId) },
           update
-        );
-        res.send({
+        );      
+          logTrackings(tracingId,"Pickup in progress")
+
+       return res.send({
           success: true,
           updatedParcel: paidParcel,
           // paidParcel: result,
           TracingId: tracingId,
           TransactionId: session.payment_intent,
         });
-        logTrackings(tracingId,"Pickup in progress")
       }
     });
 
@@ -340,6 +344,18 @@ app.patch('/parcels/:id/deleveryStatus',async(req,res)=>{
     app.get("/trackings/:trackingId",async(req,res)=>{
       const query={trackingId:req.params.trackingId}
       const result=await tracingsCollections.find(query).sort({createdAt:-1}).toArray()
+      res.send(result)
+    })
+    app.get('/parcels/status/stat',async(req,res)=>{
+      const pipeline=[
+        {
+          $group:{
+            _id:"$deliveryStatus",
+            count:{$sum:1}
+          }
+        }
+      ]
+      const result=await parcellCollections.aggregate(pipeline).toArray()
       res.send(result)
     })
     // Send a ping to confirm a successful connection
