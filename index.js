@@ -346,12 +346,19 @@ app.patch('/parcels/:id/deleveryStatus',async(req,res)=>{
       const result=await tracingsCollections.find(query).sort({createdAt:-1}).toArray()
       res.send(result)
     })
+    // Agregatioons here
     app.get('/parcels/status/stat',async(req,res)=>{
       const pipeline=[
         {
           $group:{
             _id:"$deliveryStatus",
             count:{$sum:1}
+          }
+         
+        },{
+           $project:{
+            status:'$_id',
+            count:1
           }
         }
       ]
