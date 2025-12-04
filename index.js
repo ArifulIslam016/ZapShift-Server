@@ -347,7 +347,9 @@ app.patch('/parcels/:id/deleveryStatus',async(req,res)=>{
       res.send(result)
     })
     // Agregatioons here
-    app.get('/parcels/status/stat',async(req,res)=>{
+
+    // Admin upadted stats of parcels works aggeration api here
+    app.get('/parcels/status/stat',IsAuthorized,verifyAdmin,async(req,res)=>{
       const pipeline=[
         {
           $group:{
@@ -363,6 +365,16 @@ app.patch('/parcels/:id/deleveryStatus',async(req,res)=>{
         }
       ]
       const result=await parcellCollections.aggregate(pipeline).toArray()
+      res.send(result)
+    })
+    // Rider updates stats based on his worked parcels only deliveried
+    app.get('/rider/deliveried-parcels-stats',async(req,res)=>{
+      const email=req.query.email;
+      const pipeline=[
+     {   $match:{riderEmail:email,deliveryStatus:"Deliveried"}}
+      ]
+      const result=await parcellCollections.aggregate(pipeline).toArray(
+      )
       res.send(result)
     })
     // Send a ping to confirm a successful connection
